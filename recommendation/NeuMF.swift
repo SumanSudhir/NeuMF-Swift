@@ -14,8 +14,8 @@ public struct NeuMF: Layer {
         num_items: Int,
         mf_dim: Int,
         mf_reg: Float,
-        mlp_layer_sizes: Int,
-        mlp_layer_regs: Float
+        mlp_layer_sizes: [Int],
+        mlp_layer_regs: [Float]
     ) {
         self.num_users = num_users
         self.num_items = num_items
@@ -25,8 +25,8 @@ public struct NeuMF: Layer {
         self.mlp_layer_regs = mlp_layer_regs
         let num_mlp_layers = self.mlp_layer_sizes.count
 
-        precondition(self.mlp_layer_sizes[0]%2 == 0, 'u dummy, mlp_layer_sizes[0] % 2 != 0')
-        precondition(self.mlp_layer_sizes.count == self.mlp_layer_regs.count, 'u dummy, layer_sizes != layer_regs!')
+        precondition(self.mlp_layer_sizes[0]%2 == 0, "u dummy, mlp_layer_sizes[0] % 2 != 0")
+        precondition(self.mlp_layer_sizes.count == self.mlp_layer_regs.count, "u dummy, layer_sizes != layer_regs!")
 
         //TODO: regularization
         var self.mf_user_embed = Embedding<Float>(vocabularySize: self.num_users, embeddingSize: self.mf_dim)
@@ -42,7 +42,7 @@ public struct NeuMF: Layer {
         var final_dense = Dense(inputSize: (self.mlp_layer_sizes[3] + self.mf_dim), outputSize: 1, activation: sigmoid)
 
         @differentiable
-        public func callAsFunction(_ user_indices: Int , _ item_indeces: Int) -> Tensor<Float>{
+        public func callAsFunction(_ user_indices: Int , _ item_indices: Int) -> Tensor<Float>{
             var user_embed_mlp = self.mlp_user_embed(user_indices)
             var item_embed_mlp = self.mlp_item_embed(item_indices)
             var user_embed_mf = self.mf_user_embed(user_indices)
@@ -58,3 +58,17 @@ public struct NeuMF: Layer {
         }
     }
 }
+
+
+// var size = [64, 32, 16, 8]
+// var regs = [0, 0, 0, 0]
+// var model = NeuMf(num_users: 5, num_items: 3, mf_dim: 10, mf_reg: 0, mlp_layer_sizes: size, mlp_layer_regs: regs)
+//
+// let optimizer = SGD(for: model, learningRate: 0.001)
+//
+// print("Starting Training")
+//
+// for epoch in 1...10 {
+//     Context.local.learningPhase = .training
+//     print(epoch)
+// }
