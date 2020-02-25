@@ -63,28 +63,32 @@ public struct NeuMF: Module {
             let user_embed_mf = self.mf_user_embed(user_indices)
             let item_embed_mf = self.mf_item_embed(item_indices)
 
-            let mf_vector = matmul(user_embed_mf,item_embed_mf)
+            // let mf_vector = matmul(user_embed_mf,item_embed_mf)
+            let mf_vector = user_embed_mf*item_embed_mf
             var mlp_vector = user_embed_mlp.concatenated(with:item_embed_mlp,alongAxis:-1)
-
+            //
+            // print(mlp_vector.shape)
             mlp_vector = mlp_vector.sequenced(through: dense1, dense2, dense3)
             let vector = mlp_vector.concatenated(with:mf_vector,alongAxis:-1)
 
             return final_dense(vector)
-            // return mlp_vector
+            // return mf_vector
         }
     // }
 }
 
 
-// var size:[Int] = [64, 32, 16, 8]
+// var size:[Int] = [16, 8, 4, 8]
 // var regs:[Float] = [0, 0, 0, 0]
-// var model = NeuMF(num_users: 5, num_items: 3, mf_dim: 10, mf_reg: 0.0, mlp_layer_sizes: size, mlp_layer_regs: regs)
+// var model = NeuMF(num_users: 16, num_items: 3, mf_dim: 16, mf_reg: 0.0, mlp_layer_sizes: size, mlp_layer_regs: regs)
 //
 // let optimizer = SGD(for: model, learningRate: 0.001)
 //
 // print("Starting Training")
+// var input: Tensor<Int32> = [[0,1],[1,2]]
 //
 // for epoch in 1...10 {
-//     Context.local.learningPhase = .training
-//     print(epoch)
+//     let logits = model(input)
+//     print(epoch, logits)
+//     // print(epoch)
 // }
