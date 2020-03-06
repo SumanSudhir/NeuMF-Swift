@@ -3,12 +3,11 @@ import ModelSupport
 import TensorFlow
 import Datasets
 
-extension Array where Element : Collection, Iterator.Element: Hashable {
+extension Sequence where Element : Collection {
     subscript(column column : Element.Index) -> [ Element.Iterator.Element ] {
         return map { $0[ column ] }
     }
 }
-
 extension Sequence where Iterator.Element: Hashable {
     func unique() -> [Iterator.Element] {
         var seen: Set<Iterator.Element> = []
@@ -35,13 +34,14 @@ public struct MovieLens {
             remoteRoot: URL(string: "http://files.grouplens.org/datasets/movielens/")!,
             localStorageDirectory: localURL.appendingPathComponent("data/", isDirectory: true))
 
-        return try! String(contentsOf: dataFolder.appendingPathComponent("rating.dat"), encoding: .utf8)
+        return try! String(contentsOf: dataFolder.appendingPathComponent("ratings.dat"), encoding: .utf8)
     }
 
     public init() {
         let data  = MovieLens.downloadMovieLensDatasetIfNotPresent()
-        let df: [[Float]] = data.split(separator: "\n").map{ String($0).split(separator: ":").compactMap{ Float(String($0)) } }
+        let df_data: [[Float]] = data.split(separator: "\n").map{ String($0).split(separator: ":").compactMap{ Float(String($0)) } }
 
+        var df = df_data[0..<500]
         let user_pool = df[column: 0].unique()
         let item_pool = df[column: 1].unique()
         let rating = df[column: 2]
