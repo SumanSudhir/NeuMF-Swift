@@ -16,8 +16,8 @@ extension Sequence where Iterator.Element: Hashable {
 
 public struct MovieLens {
 
-    public let user_pool: [Float]
-    public let item_pool: [Float]
+    public let users: [Float]
+    public let items: [Float]
     public let num_users: Int
     public let num_items: Int
     public let user_item_rating: [[Int]]
@@ -40,24 +40,24 @@ public struct MovieLens {
     }
 
     public init() {
-        let data  = MovieLens.downloadMovieLensDatasetIfNotPresent()
-        let df_data: [[Float]] = data.split(separator: "\n").map{ String($0).split(separator: ":").compactMap{ Float(String($0)) } }
+        let dataFiles  = MovieLens.downloadMovieLensDatasetIfNotPresent()
+        let dataRecords: [[Float]] = dataFiles.split(separator: "\n").map{ String($0).split(separator: ":").compactMap{ Float(String($0)) } }
 
-        let df = df_data[0..<30000]
-        let user_pool = df[column: 0].unique()
-        let item_pool = df[column: 1].unique()
-        let rating = df[column: 2]
+        let data = dataRecords[0..<30000]
+        let users = data[column: 0].unique()
+        let items = data[column: 1].unique()
+        let rating = data[column: 2]
 
-        let user_index = 0...user_pool.count-1
-        let user2id:[Float:Int] = Dictionary(uniqueKeysWithValues: zip(user_pool,user_index))
-        let id2user:[Int:Float] = Dictionary(uniqueKeysWithValues: zip(user_index,user_pool))
+        let user_index = 0...users.count-1
+        let user2id:[Float:Int] = Dictionary(uniqueKeysWithValues: zip(users,user_index))
+        let id2user:[Int:Float] = Dictionary(uniqueKeysWithValues: zip(user_index,users))
 
-        let item_index = 0...item_pool.count-1
-        let item2id:[Float:Int] = Dictionary(uniqueKeysWithValues: zip(item_pool,item_index))
-        let id2item:[Int:Float] = Dictionary(uniqueKeysWithValues: zip(item_index,item_pool))
+        let item_index = 0...items.count-1
+        let item2id:[Float:Int] = Dictionary(uniqueKeysWithValues: zip(items,item_index))
+        let id2item:[Int:Float] = Dictionary(uniqueKeysWithValues: zip(item_index,items))
 
-        var neg_sampling = Tensor<Float>(zeros: [user_pool.count,item_pool.count])
-        for element in df{
+        var neg_sampling = Tensor<Float>(zeros: [users.count,items.count])
+        for element in data{
             let u_index = user2id[element[0]]!
             let i_index = item2id[element[1]]!
             neg_sampling[u_index][i_index] = Tensor(1.0)
@@ -69,10 +69,10 @@ public struct MovieLens {
                 dataset.append([user_id,item_id, rating])
             }
         }
-        self.num_users = user_pool.count
-        self.num_items = item_pool.count
-        self.user_pool = user_pool
-        self.item_pool = item_pool
+        self.num_users = users.count
+        self.num_items = items.count
+        self.users = users
+        self.items = items
         self.rating = rating
         self.user2id = user2id
         self.id2user = id2user
