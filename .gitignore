@@ -1,10 +1,6 @@
 /paper
-swifttest.ipynb
 /swift-install
-dataset.ipynb
-swifttest.ipynb
 .ipynb_checkpoints
-/data/swift-install
-*.csv
-*.dat
 __pycache__
+/.build
+/Packages
