@@ -1,9 +1,10 @@
 /paper
 swifttest.ipynb
 /swift-install
-/recommendation/swift-install
-/recommendation/data
 dataset.ipynb
 swifttest.ipynb
 .ipynb_checkpoints
+/data/swift-install
+*.csv
+*.dat
 __pycache__
