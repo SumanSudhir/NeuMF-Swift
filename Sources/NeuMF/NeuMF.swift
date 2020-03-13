@@ -9,7 +9,7 @@ public struct NeuMF: Module {
     @noDerivative public let num_items: Int
     @noDerivative public let mf_dim: Int
     @noDerivative public let mf_reg: Scalar
-    @noDerivative public var mlp_layer_sizes : [Int] = [64,32,16,18]
+    @noDerivative public var mlp_layer_sizes : [Int] = [64,32,16,8]
     @noDerivative public var mlp_layer_regs: [Scalar] = [0,0,0,0]
 
     public var mf_user_embed: Embedding<Scalar>

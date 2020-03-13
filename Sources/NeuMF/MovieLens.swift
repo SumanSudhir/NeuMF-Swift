@@ -78,7 +78,6 @@ public struct MovieLens {
             }
         }
 
-
         self.num_users = users.count
         self.num_items = items.count
         self.users = users
