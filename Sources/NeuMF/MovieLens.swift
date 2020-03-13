@@ -31,19 +31,18 @@ public struct MovieLens {
     static func downloadMovieLensDatasetIfNotPresent() -> String{
         let localURL = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let dataFolder = DatasetUtilities.downloadResource(
-            filename: "ml-1m",
+            filename: "ml-100k",
             fileExtension: "zip",
             remoteRoot: URL(string: "http://files.grouplens.org/datasets/movielens/")!,
             localStorageDirectory: localURL.appendingPathComponent("data/", isDirectory: true))
 
-        return try! String(contentsOf: dataFolder.appendingPathComponent("ratings.dat"), encoding: .utf8)
-    }
+        return try! String(contentsOf: dataFolder.appendingPathComponent("u1.base"), encoding: .utf8)}
 
     public init() {
         let dataFiles  = MovieLens.downloadMovieLensDatasetIfNotPresent()
-        let dataRecords: [[Float]] = dataFiles.split(separator: "\n").map{ String($0).split(separator: ":").compactMap{ Float(String($0)) } }
+        let data: [[Float]] = dataFiles.split(separator: "\n").map{ String($0).split(separator: "\t").compactMap{ Float(String($0)) } }
 
-        let data = dataRecords[0..<30000]
+        // let data = dataRecords[0...30000]
         let users = data[column: 0].unique()
         let items = data[column: 1].unique()
         let rating = data[column: 2]
@@ -57,18 +56,29 @@ public struct MovieLens {
         let id2item:[Int:Float] = Dictionary(uniqueKeysWithValues: zip(item_index,items))
 
         var neg_sampling = Tensor<Float>(zeros: [users.count,items.count])
+
+        var dataset:[[Int]] = []
         for element in data{
             let u_index = user2id[element[0]]!
             let i_index = item2id[element[1]]!
-            neg_sampling[u_index][i_index] = Tensor(1.0)
-        }
-        var dataset:[[Int]] = []
-        for user_id in user_index{
-            for item_id in item_index{
-                let rating  = Int(neg_sampling[user_id][item_id].scalarized())
-                dataset.append([user_id,item_id, rating])
+            let rating = element[2]
+            if (rating > 0){
+              dataset.append([u_index,i_index, 1])
+              neg_sampling[u_index][i_index] = Tensor(1.0)
             }
         }
+
+        for u_index in user_index{
+            for i in 0...4{
+              var i_index = Int.random(in:item_index)
+              while(neg_sampling[u_index][i_index].scalarized() == 1.0){
+                i_index = Int.random(in:item_index)
+              }
+              dataset.append([u_index,i_index, 0])
+            }
+        }
+
+
         self.num_users = users.count
         self.num_items = items.count
         self.users = users
