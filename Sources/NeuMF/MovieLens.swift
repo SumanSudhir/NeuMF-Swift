@@ -40,9 +40,9 @@ public struct MovieLens {
 
     public init() {
         let dataFiles  = MovieLens.downloadMovieLensDatasetIfNotPresent()
-        let data: [[Float]] = dataFiles.split(separator: "\n").map{ String($0).split(separator: "\t").compactMap{ Float(String($0)) } }
+        let dataf: [[Float]] = dataFiles.split(separator: "\n").map{ String($0).split(separator: "\t").compactMap{ Float(String($0)) } }
 
-        // let data = dataRecords[0...30000]
+        let data = dataf[0..<500]
         let users = data[column: 0].unique()
         let items = data[column: 1].unique()
         let rating = data[column: 2]
@@ -58,18 +58,21 @@ public struct MovieLens {
         var neg_sampling = Tensor<Float>(zeros: [users.count,items.count])
 
         var dataset:[[Int]] = []
+
         for element in data{
             let u_index = user2id[element[0]]!
             let i_index = item2id[element[1]]!
             let rating = element[2]
             if (rating > 0){
-              dataset.append([u_index,i_index, 1])
               neg_sampling[u_index][i_index] = Tensor(1.0)
             }
         }
-
-        for u_index in user_index{
-            for i in 0...4{
+        for element in data{
+            let u_index = user2id[element[0]]!
+            let i_index = item2id[element[1]]!
+            // let rating = element[2]
+            dataset.append([u_index,i_index, 1])
+            for i in 0...3{
               var i_index = Int.random(in:item_index)
               while(neg_sampling[u_index][i_index].scalarized() == 1.0){
                 i_index = Int.random(in:item_index)
@@ -77,6 +80,7 @@ public struct MovieLens {
               dataset.append([u_index,i_index, 0])
             }
         }
+
 
         self.num_users = users.count
         self.num_items = items.count
