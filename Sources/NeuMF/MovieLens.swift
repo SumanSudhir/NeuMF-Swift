@@ -20,7 +20,7 @@ public struct MovieLens {
     public let items: [Float]
     public let num_users: Int
     public let num_items: Int
-    public let user_item_rating: [[Int]]
+    public let user_item_rating: [TensorPair<Int32,Float>]
     public let rating: [Float]
     public let user2id: [Float:Int]
     public let id2user: [Int:Float]
@@ -40,24 +40,24 @@ public struct MovieLens {
 
     public init() {
         let dataFiles  = MovieLens.downloadMovieLensDatasetIfNotPresent()
-        let dataf: [[Float]] = dataFiles.split(separator: "\n").map{ String($0).split(separator: "\t").compactMap{ Float(String($0)) } }
+        let data: [[Float]] = dataFiles.split(separator: "\n").map{ String($0).split(separator: "\t").compactMap{ Float(String($0)) } }
 
-        let data = dataf[0..<500]
+        // let data = datad[0...5000]
         let users = data[column: 0].unique()
         let items = data[column: 1].unique()
         let rating = data[column: 2]
 
         let user_index = 0...users.count-1
-        let user2id:[Float:Int] = Dictionary(uniqueKeysWithValues: zip(users,user_index))
-        let id2user:[Int:Float] = Dictionary(uniqueKeysWithValues: zip(user_index,users))
+        let user2id = Dictionary(uniqueKeysWithValues: zip(users,user_index))
+        let id2user = Dictionary(uniqueKeysWithValues: zip(user_index,users))
 
         let item_index = 0...items.count-1
-        let item2id:[Float:Int] = Dictionary(uniqueKeysWithValues: zip(items,item_index))
-        let id2item:[Int:Float] = Dictionary(uniqueKeysWithValues: zip(item_index,items))
+        let item2id = Dictionary(uniqueKeysWithValues: zip(items,item_index))
+        let id2item = Dictionary(uniqueKeysWithValues: zip(item_index,items))
 
         var neg_sampling = Tensor<Float>(zeros: [users.count,items.count])
 
-        var dataset:[[Int]] = []
+        var dataset:[TensorPair<Int32,Float>] = []
 
         for element in data{
             let u_index = user2id[element[0]]!
@@ -67,20 +67,23 @@ public struct MovieLens {
               neg_sampling[u_index][i_index] = Tensor(1.0)
             }
         }
+
         for element in data{
             let u_index = user2id[element[0]]!
             let i_index = item2id[element[1]]!
-            // let rating = element[2]
-            dataset.append([u_index,i_index, 1])
+
+            let x = Tensor<Int32>([Int32(u_index), Int32(i_index)])
+            dataset.append(TensorPair<Int32, Float>(first:x, second: [1]))
+
             for i in 0...3{
               var i_index = Int.random(in:item_index)
               while(neg_sampling[u_index][i_index].scalarized() == 1.0){
                 i_index = Int.random(in:item_index)
               }
-              dataset.append([u_index,i_index, 0])
+              let x = Tensor<Int32>([Int32(u_index), Int32(i_index)])
+              dataset.append(TensorPair<Int32, Float>(first: x, second: [0]))
             }
         }
-
 
         self.num_users = users.count
         self.num_items = items.count

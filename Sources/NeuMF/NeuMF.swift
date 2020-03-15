@@ -21,6 +21,7 @@ public struct NeuMF: Module {
     public var dense3: Dense<Scalar>
     public var final_dense: Dense<Scalar>
 
+
     public init(
         num_users: Int,
         num_items: Int,
@@ -54,20 +55,24 @@ public struct NeuMF: Module {
     }
         @differentiable
         public func callAsFunction(_ input: Tensor<Int32>) -> Tensor<Scalar>{
-            let user_indices  = input[0]
-            let item_indices = input[1]
+            let user_indices = input.unstacked(alongAxis:1)[0]
+            let item_indices = input.unstacked(alongAxis:1)[1]
 
             let user_embed_mlp = self.mlp_user_embed(user_indices)
             let item_embed_mlp = self.mlp_item_embed(item_indices)
             let user_embed_mf = self.mf_user_embed(user_indices)
             let item_embed_mf = self.mf_item_embed(item_indices)
 
+            // let mf_vector = matmul(user_embed_mf,item_embed_mf)
             let mf_vector = user_embed_mf*item_embed_mf
             var mlp_vector = user_embed_mlp.concatenated(with:item_embed_mlp,alongAxis:-1)
+            //
+            // print(mlp_vector.shape)
             mlp_vector = mlp_vector.sequenced(through: dense1, dense2, dense3)
             let vector = mlp_vector.concatenated(with:mf_vector,alongAxis:-1)
 
             return final_dense(vector)
+            // return mf_vector
         }
     // }
 }
