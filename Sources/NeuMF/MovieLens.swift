@@ -15,18 +15,31 @@ extension Sequence where Iterator.Element: Hashable {
 }
 
 public struct MovieLens {
-
+    // array of all user in training dataset
     public let trainUsers: [Float]
+    // array of all user in testing dataset
     public let testUsers: [Float]
+    // array of test datset of users, items, rating and timestanp
     public let testData: [[Float]]
+    // array of all items present in dataset
     public let items: [Float]
+    // total number of users
     public let numUsers: Int
+    // total number of items
     public let numItems: Int
+    // train matrix of user, item and label
     public let trainMatrix: [TensorPair<Int32,Float>]
+    // Dictionary mapping each unique user to unique id starting from 0
     public let user2id: [Float:Int]
+    // Dictionary mapping id to its user
     public let id2user: [Int:Float]
+    // Dictionary mapping each unique item to unique id starting from 0
     public let item2id: [Float:Int]
+    // Dictionary mapping id to its item
     public let id2item: [Int:Float]
+    // Tensor matrix to store interaction of item of user and item
+    // Each row is unique user and each column is item
+    // 1 correspond to interaction between user and item and 0 for vice-versa
     public let trainNegSampling: Tensor<Float>
 
     static func downloadMovieLensDatasetIfNotPresent() -> URL{
@@ -46,7 +59,6 @@ public struct MovieLens {
         let trainData: [[Float]] = trainFiles.split(separator: "\n").map{ String($0).split(separator: "\t").compactMap{ Float(String($0))}}
         let testData: [[Float]] = testFiles.split(separator: "\n").map{ String($0).split(separator: "\t").compactMap{ Float(String($0))}}
 
-        // let data = datad[0...5000]
         let trainUsers = trainData[column: 0].unique()
         let testUsers = testData[column: 0].unique()
 
@@ -79,7 +91,7 @@ public struct MovieLens {
             let x = Tensor<Int32>([Int32(uIndex), Int32(iIndex)])
             dataset.append(TensorPair<Int32, Float>(first:x, second: [1]))
 
-            for i in 0...3{
+            for _ in 0...3{
               var iIndex = Int.random(in:itemIndex)
               while(trainNegSampling[uIndex][iIndex].scalarized() == 1.0){
                 iIndex = Int.random(in:itemIndex)
