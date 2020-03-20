@@ -72,6 +72,7 @@ public struct MovieLens {
               trainNegSampling[uIndex][iIndex] = Tensor(1.0)
             }
         }
+
         for element in trainData{
             let uIndex = user2id[element[0]]!
             let iIndex = item2id[element[1]]!
